@@ -34,14 +34,6 @@ export default function HomeScreen() {
           <MaterialIcons name="person" size={24} color="#fff" />
           <Text style={styles.buttonText}>Sign Up</Text>
         </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => router.push("/dashboard")}
-        >
-          <MaterialIcons name="settings" size={24} color="#fff" />
-          <Text style={styles.buttonText}>Dashboard</Text>
-        </TouchableOpacity>
       </View>
     </View>
   );
