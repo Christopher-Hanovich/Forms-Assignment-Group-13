@@ -1,9 +1,11 @@
-import React from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, ScrollView } from 'react-native';
-import { Formik } from 'formik';
-import * as Yup from 'yup';
-import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { Formik } from 'formik';
+import React, { useState } from 'react';
+import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import * as Yup from 'yup';
+import { auth } from "../lib/firebase";
 
 // Sign In Validation Schema
 const signInValidationSchema = Yup.object().shape({
@@ -20,8 +22,9 @@ interface SignInFormValues {
   password: string;
 }
 
-export default function SignIn() {
+const SignIn = () =>{
   const router = useRouter();
+  const [firebaseError, setFirebaseError] = useState<string | null>(null); 
 
   const initialValues: SignInFormValues = {
     email: '',
@@ -29,12 +32,14 @@ export default function SignIn() {
   };
 
   const handleLogin = async (values: SignInFormValues) => {
-    Alert.alert(
-      'Login Successful',
-      'Welcome back! You have been signed in successfully.',
-      [{ text: 'OK', onPress: () => router.push('/dashboard') }]
-    );
-    console.log('Login Data:', values);
+    try {
+      setFirebaseError(null);
+      await signInWithEmailAndPassword(auth, values.email, values.password);
+      router.replace('/dashboard');
+    } catch (error: any) {
+      setFirebaseError(error.message || 'Login Failed');
+    }
+    
   };
 
   return (
@@ -109,7 +114,7 @@ export default function SignIn() {
                 <Text style={styles.link}>Don&apos;t have an account? Sign Up</Text>
               </TouchableOpacity>
               
-              <TouchableOpacity onPress={() => router.back()}>
+              <TouchableOpacity onPress={() => router.replace('/')}>
                 <Text style={styles.link}>← Back to Home</Text>
               </TouchableOpacity>
             </View>
@@ -119,6 +124,8 @@ export default function SignIn() {
     </ScrollView>
   );
 }
+
+export default SignIn;
 
 const styles = StyleSheet.create({
   container: {

@@ -1,16 +1,29 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
-import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
+import { Redirect, useRouter } from 'expo-router';
+import React from 'react';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-export default function Dashboard() {
+import { useAuth } from '../hooks/useAuth';
+import { logout } from '../utils/logout';
+
+
+const Dashboard = () => {
+  const { user, loading } = useAuth();
   const router = useRouter();
 
-  const handleLogout = () => {
-    console.log("User logged out");
-    router.replace('/');
-  };
+  if (loading) {
+    return <Text>Loading...</Text>;
+  }
 
+  if (!user) {
+    return <Redirect href="/sign-in" />;
+  }
+  
+  const handleLogout = async () => {
+    await logout();
+    router.replace('/sign-in');
+  };
+  
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
@@ -64,7 +77,14 @@ export default function Dashboard() {
       </TouchableOpacity>
     </ScrollView>
   );
-}
+};
+
+export default Dashboard;
+
+
+
+  
+
 
 const styles = StyleSheet.create({
   container: {
