@@ -66,7 +66,7 @@ const Dashboard = () => {
     <ScrollView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.welcome}>Welcome to Dashboard!</Text>
-        <Text style={styles.subtitle}>Employee Management System</Text>
+        <Text style={styles.subtitle}>LAB 3</Text>
       </View>
 
       <View style={styles.statsContainer}>
