@@ -1,14 +1,65 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
-import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
+import { Redirect, useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-export default function Dashboard() {
+import { collection, getDocs } from 'firebase/firestore';
+import { useAuth } from '../hooks/useAuth';
+import { db } from '../lib/firebase';
+import { logout } from '../utils/logout';
+
+
+
+const Dashboard = () => {
+  const { user, loading } = useAuth();
   const router = useRouter();
+  const [employeeCount, setEmployeeCount] = useState<number | null>(null);
+  const [departmentCount, setDepartmentCount] = useState<number | null>(null);
 
-  const handleLogout = () => {
-    console.log("User logged out");
-    router.replace('/');
+  useEffect(() => {
+    const fetchEmployeeCount = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, 'employees'));
+        setEmployeeCount(querySnapshot.size);
+      } catch (error) {
+        console.error('Error fetching employee count: ', error);
+      }
+    };
+
+    fetchEmployeeCount();
+  }, [loading]);
+
+  useEffect(() => {
+    const fetchDepartmentCount = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, 'employees'));
+        const departments = new Set<string>();
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          if (data.department) {
+            departments.add(data.department);
+          }
+        });
+        setDepartmentCount(departments.size);
+      } catch (error) {
+        console.error('Error fetching department count: ', error);
+      }
+    };
+
+    fetchDepartmentCount();
+  }, [loading]);
+
+  if (loading) {
+    return <Text>Loading...</Text>;
+  }
+
+  if (!user) {
+    return <Redirect href="/sign-in" />;
+  }
+  
+  const handleLogout = async () => {
+    await logout();
+    router.replace('/sign-in');
   };
 
   return (
@@ -21,13 +72,13 @@ export default function Dashboard() {
       <View style={styles.statsContainer}>
         <View style={styles.statCard}>
           <MaterialIcons name="people" size={32} color="#3b82f6" />
-          <Text style={styles.statNumber}>24</Text>
+          <Text style={styles.statNumber}>{employeeCount !== null ? employeeCount : 'Loading...'}</Text>
           <Text style={styles.statLabel}>Employees</Text>
         </View>
         
         <View style={styles.statCard}>
           <MaterialIcons name="business" size={32} color="#10b981" />
-          <Text style={styles.statNumber}>5</Text>
+          <Text style={styles.statNumber}>{departmentCount !== null ? departmentCount : 'Loading...'}</Text>
           <Text style={styles.statLabel}>Departments</Text>
         </View>
       </View>
@@ -64,7 +115,9 @@ export default function Dashboard() {
       </TouchableOpacity>
     </ScrollView>
   );
-}
+};
+
+export default Dashboard;
 
 const styles = StyleSheet.create({
   container: {
