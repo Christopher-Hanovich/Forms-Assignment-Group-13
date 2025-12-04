@@ -1,9 +1,13 @@
-import React from 'react';
-import { View, Text, ScrollView, TextInput, TouchableOpacity, Alert, StyleSheet } from 'react-native';
-import { Formik } from 'formik';
-import * as Yup from 'yup';
-import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { Formik } from 'formik';
+import React, { useEffect } from 'react';
+import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import * as Yup from 'yup';
+import { useAuth } from '../hooks/useAuth';
+import { db } from '../lib/firebase';
+
 
 // Employee Form Validation Schema
 const employeeValidationSchema = Yup.object().shape({
@@ -43,6 +47,21 @@ interface EmployeeFormValues {
 
 export default function EmployeeForm() {
   const router = useRouter();
+  const { user, loading } = useAuth();
+
+useEffect(() => {
+  if (!loading && !user) {
+    router.replace('/sign-in');
+  }
+}, [user, loading, router]);
+
+if (loading) {
+  return <Text>Loading...</Text>; // Show loading while checking auth
+}
+
+if (!user) {
+  return null;
+}
 
   const initialValues: EmployeeFormValues = {
     firstName: '',
@@ -54,13 +73,30 @@ export default function EmployeeForm() {
     phone: '',
   };
 
-  const handleSubmit = (values: EmployeeFormValues) => {
-    Alert.alert(
-      'Employee Information Submitted',
-      `Employee: ${values.firstName} ${values.lastName}\nEmail: ${values.email}\nDepartment: ${values.department}\nPosition: ${values.position}\nSalary: $${values.salary}`,
-      [{ text: 'OK' }]
-    );
-    console.log('Employee Data Submitted:', values);
+  const handleSubmit = async (values: EmployeeFormValues) => {
+    try {
+      const docRef = await addDoc(collection(db, 'employees'), {
+        firstName: values.firstName,
+        lastName: values.lastName,
+        email: values.email,
+        department: values.department,
+        position: values.position,
+        salary: parseFloat(values.salary),
+        phone: values.phone,
+        createdAt: serverTimestamp(),
+        createdBy: user.uid,
+      });
+
+      Alert.alert(
+        'Success',
+        `Employee information saved successfully!\nDocument ID: ${docRef.id}`,
+        [{ text: 'OK' }]
+      );
+      console.log('Employee Data Saved to Firestore:', values);
+    } catch (error) {
+      console.error('Error saving employee data:', error);
+      Alert.alert('Error', 'Failed to save employee information. Please try again.');
+    }
   };
 
   return (

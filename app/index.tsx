@@ -1,8 +1,8 @@
-import { Text, View, TouchableOpacity, StyleSheet } from "react-native";
-import { useRouter } from "expo-router";
 import { MaterialIcons } from '@expo/vector-icons';
+import { useRouter } from "expo-router";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
-export default function HomeScreen() {
+const HomeScreen = () => {
   const router = useRouter();
 
   return (
@@ -38,6 +38,7 @@ export default function HomeScreen() {
     </View>
   );
 }
+export default HomeScreen;
 
 const styles = StyleSheet.create({
   container: {
