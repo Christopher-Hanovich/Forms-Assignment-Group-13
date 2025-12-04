@@ -1,9 +1,12 @@
-import React from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, ScrollView } from 'react-native';
-import { Formik } from 'formik';
-import * as Yup from 'yup';
-import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
+import { Formik } from 'formik';
+import React from 'react';
+import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import * as Yup from 'yup';
+import { auth, db } from '../lib/firebase';
 
 // Sign Up Validation Schema
 const signUpValidationSchema = Yup.object().shape({
@@ -37,24 +40,54 @@ interface SignUpFormValues {
   phone: string;
 }
 
-export default function SignUp() {
-  const router = useRouter();
+const initialValues: SignUpFormValues = {
+  fullName: '',
+  email: '',
+  password: '',
+  confirmPassword: '',
+  phone: '',
+};
 
-  const initialValues: SignUpFormValues = {
-    fullName: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    phone: '',
-  };
+const SignUp = () => {
+  const router = useRouter();
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [firebaseError, setFirebaseError] = React.useState<string | null>(null);
 
   const handleSignUp = async (values: SignUpFormValues) => {
-    Alert.alert(
-      'Account Created Successfully',
-      `Welcome ${values.fullName}! Your account has been created.`,
-      [{ text: 'OK', onPress: () => router.push('/dashboard') }]
-    );
-    console.log('Sign Up Data:', values);
+    try {
+      setIsLoading(true);
+      setFirebaseError(null);
+
+      // Create user account
+      const userCredentials = await createUserWithEmailAndPassword(
+        auth,
+        values.email,
+        values.password
+      );
+
+      // Redirect immediately after successful user creation
+      router.replace('/dashboard');
+    
+
+      // Optional save user details to Firestore
+      try {
+        await setDoc(doc(db, 'users', userCredentials.user.uid), {
+          fullName: values.fullName,
+          email: values.email,
+          phone: values.phone,
+          createdAt: new Date().toISOString(),
+        });
+      }
+      catch (firestoreError) {
+        console.error('Error saving user data to Firestore:', firestoreError);
+      }
+    }
+    catch (error: any) {
+      setFirebaseError(error.message || 'Sign Up Failed');
+    }
+    finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -204,6 +237,8 @@ export default function SignUp() {
     </ScrollView>
   );
 }
+
+export default SignUp;
 
 const styles = StyleSheet.create({
   container: {
