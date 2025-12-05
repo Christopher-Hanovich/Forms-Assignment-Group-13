@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { Formik } from 'formik';
-import React from 'react';
+import React, { useState } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import * as Yup from 'yup';
 import { auth, db } from '../lib/firebase';
@@ -50,8 +50,8 @@ const initialValues: SignUpFormValues = {
 
 const SignUp = () => {
   const router = useRouter();
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [firebaseError, setFirebaseError] = React.useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [firebaseError, setFirebaseError] = useState<string | null>(null);
 
   const handleSignUp = async (values: SignUpFormValues) => {
     try {
@@ -100,7 +100,7 @@ const SignUp = () => {
         validationSchema={signUpValidationSchema}
         onSubmit={handleSignUp}
       >
-        {({ handleChange, handleBlur, handleSubmit, values, errors, touched }) => (
+        {({ handleChange, handleBlur, handleSubmit, values, errors, touched }: any) => (
           <View style={styles.form}>
             {/* Full Name Field */}
             <View style={styles.inputContainer}>
